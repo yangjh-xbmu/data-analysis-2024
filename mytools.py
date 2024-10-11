@@ -4,7 +4,9 @@ from openai import OpenAI
 def xfllm(prompt: str):
     '''
     调用星火认知大模型4.0Ultra
+
     参数prompt：传入到大模型的提示词，应为字符串
+
     返回值：大模型返回的文本值
     '''
     from sparkai.llm.llm import ChatSparkLLM, ChunkPrintHandler
@@ -40,28 +42,22 @@ def xfllm(prompt: str):
 # Please install OpenAI SDK first: `pip3 install openai`
 
 
-# Please install OpenAI SDK first: `pip3 install openai`
-
-def dsllm(userprompt: str, sysprompt="请回答用户的问题，如不知道，请不要虚构"):
+def dsllm(prompt: str):
     '''
     调用Deepseek大模型
 
-    参数：
+    参数：用户提示词
 
-    userprompt：用户角色提示词
-    sysprompt： system 角色提示词
-
-    返回值：
-    返回大模型生成的文本内容
+    返回值: Deepseek大模型根据提示词生成的内容
     '''
-    client = OpenAI(api_key="sk-f5801b0ee8a946b18e93029e76e0dd99",
+    client = OpenAI(api_key="sk-82510054170d40ac991de44ccb51ff9c",
                     base_url="https://api.deepseek.com")
 
     response = client.chat.completions.create(
         model="deepseek-chat",
         messages=[
-            {"role": "system", "content": sysprompt},
-            {"role": "user", "content": userprompt},
+            {"role": "system", "content": "You are a helpful assistant"},
+            {"role": "user", "content": prompt},
         ],
         stream=False
     )
@@ -69,4 +65,8 @@ def dsllm(userprompt: str, sysprompt="请回答用户的问题，如不知道，
     return (response.choices[0].message.content)
 
 
-# print(dsllm('请问2024年10月11日，中国的重要新闻'))
+def en(chi):
+    return dsllm(f'请扮演地道的美国英语本土教师，为我提供英语翻译服务，单词请给出音标，再给个例句。汉语是:{chi}')
+
+
+# print(en('大纲'))
