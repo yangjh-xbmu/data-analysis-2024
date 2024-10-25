@@ -46,7 +46,7 @@ def update_output(n_clicks, input_text):
         ])
     return html.Div()
 
-
+   
 # 运行应用程序
 if __name__ == '__main__':
     app.run_server(debug=True)

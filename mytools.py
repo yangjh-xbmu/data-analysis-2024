@@ -292,3 +292,16 @@ def saveContent(学习内容: str, 文件名称: str) -> str:
     with open(文件名称, "w", encoding='UTF-8') as file:
         file.write(学习内容)
     return 学习内容
+
+
+def voc_txt_to_markdown(text):
+    lines = text.strip().split('\n')
+    markdown_lines = []
+
+    for line in lines:
+        if line.strip():
+            word, definition = line.split('/', 1)
+            word = word.strip()
+            markdown_lines.append(f"## {word}\n\n{line.strip()}\n")
+
+    return '\n'.join(markdown_lines)
