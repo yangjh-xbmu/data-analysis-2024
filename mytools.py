@@ -76,8 +76,7 @@ def cognitive_load_explain(message: str) -> None:
     """
     prompt = f'''
     请扮演经验丰富的Python教学专家，我是一个Python的初学者，没有任何编程经验。
-    请依据认知负荷理论，通俗易懂地解释我的提问:{message}，并在最后生成2个测试题，但不要给出答案。
-    '''
+    请依据认知负荷理论，通俗易懂地解释我的提问:{message}，并在最后生成2个测试题，但不要给出答案。'''
     return mdContent(dsllm(prompt))
 
 
