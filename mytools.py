@@ -1,8 +1,9 @@
-import mykey
-# mykey.py文件中存放SPARKAI_APP_ID等变量的值，例如：
-# SPARKAI_APP_ID = '575a00d1'
-from IPython.display import Markdown as render
+import mykey # mykey.py文件中存放SPARKAI_APP_ID等变量的值，例如：SPARKAI_APP_ID = '575a00d1'
+import pandas as pd
+import pdfplumber
 
+from IPython.display import Markdown as render
+from typing import Optional
 
 def mdContent(content: str, cssFile: str = "githubTheme.css") -> str:
     """
@@ -304,3 +305,37 @@ def voc_txt_to_markdown(text):
             markdown_lines.append(f"## {word}\n\n{line.strip()}\n")
 
     return '\n'.join(markdown_lines)
+
+
+
+def extract_table_from_pdf(pdf_path: str, start: int, end: Optional[int] = None) -> pd.DataFrame:
+    """
+    从PDF文件中提取指定页码范围内的表格数据，并返回一个DataFrame。
+
+    参数:
+    pdf_path (str): PDF文件的路径。
+    start (int): 开始提取表格的页码（包含）。
+    end (Optional[int]): 结束提取表格的页码（不包含）。如果未提供，则提取从start页开始的所有页面。
+
+    返回值:
+    pd.DataFrame: 包含提取表格数据的DataFrame。
+    """
+    all_tables = []
+
+    with pdfplumber.open(pdf_path) as pdf:
+        # 如果end参数没有值，则提取从start页开始的所有页面
+        if end is None:
+            pages = pdf.pages[start:]
+        else:
+            pages = pdf.pages[start:end]
+
+        for page in pages:
+            tables = page.extract_tables()
+            all_tables.extend(tables)
+
+    # 将所有表格数据合并为一个DataFrame
+    df = pd.DataFrame()
+    for table in all_tables:
+        df = pd.concat([df, pd.DataFrame(table)], ignore_index=True)
+
+    return df
