@@ -1,61 +1,90 @@
 import dash
-from dash import dcc, html
-from dash.dependencies import Input, Output
-import plotly.graph_objs as go
+from dash import dcc, html, Input, Output
+import dash_bootstrap_components as dbc
+import pandas as pd
 import itertools
-from collections import Counter
+import plotly.express as px
 
-# 创建 Dash 应用程序
-app = dash.Dash(__name__)
+# 初始化 Dash 应用
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
-# 定义应用程序布局
-app.layout = html.Div([
-    html.H1("随机数抽样分布"),
-    html.Div([
-        html.Label("输入 10 个随机数 (用逗号分隔):"),
-        dcc.Input(id='input-numbers', type='text',
-                  placeholder='例如: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10'),
-        html.Button('生成抽样分布', id='submit-button', n_clicks=0),
+# 定义应用布局
+app.layout = dbc.Container([
+    dbc.Row([
+        dbc.Col(html.H1("随机数组合与平均值分析"), className="mb-4")
     ]),
-    dcc.Graph(id='sampling-distribution-plot')
+    dbc.Row([
+        dbc.Col([
+            html.Label("请输入 10 个随机数（用逗号分隔）:"),
+            dcc.Input(id='input-numbers', type='text',
+                      placeholder='例如: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10'),
+            html.Button('生成组合', id='generate-button', n_clicks=0),
+        ], width=6),
+    ]),
+    dbc.Row([
+        dbc.Col([
+            dcc.Graph(id='scatter-plot')
+        ], width=12),
+    ]),
+    dbc.Row([
+        dbc.Col([
+            html.Div(id='output-dataframe')
+        ], width=12),
+    ]),
 ])
 
 # 定义回调函数
 
 
 @app.callback(
-    Output('sampling-distribution-plot', 'figure'),
-    [Input('submit-button', 'n_clicks')],
+    [Output('scatter-plot', 'figure'),
+     Output('output-dataframe', 'children')],
+    [Input('generate-button', 'n_clicks')],
     [Input('input-numbers', 'value')]
 )
-def update_graph(n_clicks, input_numbers):
-    if n_clicks > 0 and input_numbers:
-        # 将输入的字符串转换为整数列表
-        numbers = list(map(int, input_numbers.split(',')))
+def update_output(n_clicks, input_numbers):
+    if n_clicks == 0 or not input_numbers:
+        return {}, "请输入 10 个随机数并点击生成组合按钮。"
 
-        # 生成所有可能的组合
-        combinations = list(itertools.combinations(numbers, 2))
+    # 解析用户输入的数字
+    try:
+        numbers = list(map(float, input_numbers.split(',')))
+        if len(numbers) != 10:
+            return {}, "请输入 10 个随机数。"
+    except ValueError:
+        return {}, "输入格式不正确，请用逗号分隔数字。"
 
-        # 计算每个组合的平均值
-        averages = [(comb[0] + comb[1]) / 2 for comb in combinations]
+    # 生成所有可能的组合
+    combinations = list(itertools.combinations(numbers, 2))
 
-        # 计算每个平均值的出现次数
-        average_counts = Counter(averages)
+    # 计算每个组合的平均值
+    data = []
+    for comb in combinations:
+        avg = sum(comb) / 2
+        data.append({'抽样元素1': comb[0], '抽样元素2': comb[1], '样本平均值': avg})
 
-        # 将平均值和出现次数转换为散点图数据
-        x = list(average_counts.keys())
-        y = list(average_counts.values())
+    # 创建 DataFrame
+    df = pd.DataFrame(data)
 
-        # 创建散点图
-        figure = go.Figure(data=[go.Scatter(x=x, y=y, mode='markers')])
-        figure.update_layout(
-            title='抽样分布散点图', xaxis_title='组合的平均值', yaxis_title='平均值出现的次数')
+    # 按平均值排序
+    df = df.sort_values(by='样本平均值', ascending=False).reset_index(drop=True)
 
-        return figure
-    else:
-        return {}
+    # 添加“平均值出现次数”列
+    df['平均值出现次数'] = df.groupby('样本平均值').cumcount() + 1
+
+    # 重新按平均值排序（由低到高）
+    df = df.sort_values(by='样本平均值').reset_index(drop=True)
+
+    # 绘制散点图
+    fig = px.scatter(df, x='样本平均值', y='平均值出现次数', title='平均值与出现次数散点图')
+
+    # 显示 DataFrame
+    df_table = dbc.Table.from_dataframe(
+        df, striped=True, bordered=True, hover=True)
+
+    return fig, df_table
 
 
-# 运行应用程序
+# 运行应用
 if __name__ == '__main__':
     app.run_server(debug=True)
