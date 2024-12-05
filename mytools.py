@@ -6,6 +6,7 @@ import random
 from IPython.display import Markdown as render
 from typing import Optional
 
+systemprompt = "基于已有知识，回答用户的问题。如果不了解，请直接回答不了解。"
 
 def mdContent(content: str, cssFile: str = "githubTheme.css") -> str:
     """
@@ -121,7 +122,7 @@ def dsllm(message: str) -> str:
     response = client.chat.completions.create(
         model="deepseek-chat",
         messages=[
-            {"role": "system", "content": "请如实回答用户的问题，如果不知道，请不要虚构。"},
+            {"role": "system", "content": f"请按照{systemprompt}进行内容生成前的准备工作。但不要将该过程作为内容输出"},
             {"role": "user", "content": message},
         ],
         stream=False
@@ -400,3 +401,24 @@ def calling_the_roll(名册):
     selected_student = random.choice(students)
 
     print(f"随机抽取的学生姓名是: {selected_student}")
+
+def 两个无序类别变量的统计分析(数据表, 自变量, 因变量):
+    """ 对两个无序类别变量进行描述统计和推论统计，并给出辅助结论 """
+    # 计算相关系数
+    tau_y = goodmanKruska_tau_y(数据表, 自变量, 因变量)
+    # 制作交互分类表
+    交互表 = pd.crosstab(数据表[F"{自变量}"], 数据表[F"{因变量}"])
+    # 进行卡方检验
+    chi2, p, dof, ex = stats.chi2_contingency(交互表)
+
+    print(F"tau_y系数:{tau_y: 0.4f}", 相关系数判断(tau_y))
+    print(tabulate(交互表))
+    print(F"卡方值：{chi2: .2f}, p值：{p: .4f},自由度:{dof}。")
+    print(p值判断(p))
+
+def p值判断(p: float, α=0.05):
+    """ p值判断 """
+    if p <= α:
+        return '拒绝虚无假设'
+    else:
+        return '接受虚无假设'
